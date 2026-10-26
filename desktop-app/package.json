@@ -1,0 +1,24 @@
+{
+  "name": "kairn-screentime",
+  "productName": "Kairn Screentime",
+  "version": "1.0.0",
+  "description": "Desktop app that tracks active screen time",
+  "author": "Kairn team",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable --publish never"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.kairn.screentime",
+    "productName": "Kairn Screentime",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "renderer.js", "index.html", "styles.css", "Media/**/*"],
+    "win": { "target": "portable", "artifactName": "Kairn-Screentime.${ext}", "signAndEditExecutable": false },
+    "portable": { "artifactName": "Kairn-Screentime.${ext}" }
+  }
+}

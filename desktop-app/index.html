@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!-- AUTHORSHIP: originally generated with AI by the teammate; header edited by the student; [AI] views, file paths and weekly report markup. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Keep this title exactly: main.js ignores windows with this title so the app does not track itself -->
+    <title>Screen Time Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="renderer.js" defer></script>
+</head>
+<body>
+    <header>
+        <h1 id="screentime-extension">Kairn Screentime Application</h1>
+    </header>
+    <div class="view-switch">
+        <button type="button" id="view-today" class="pill-btn active">Today</button>
+        <button type="button" id="view-weekly" class="pill-btn">Weekly Report</button>
+    </div>
+    <main>
+        <section id="today-view">
+            <div class="controls">
+                <button id="toggle-yt" class="toggle-btn">Group YouTube Items: ON</button>
+            </div>
+            <div id="tracker-list">
+                <p>Waiting for activity...</p>
+            </div>
+        </section>
+        <section id="weekly-view" hidden>
+            <div id="week-tabs"></div>
+            <p id="week-range"></p>
+            <div id="weekly-list"></div>
+            <p id="weekly-note">Time each site or app was visible on screen. Sites are grouped by the name in the window title, and overlapping windows each count, so rows should not be added together. History is kept for 5 weeks.</p>
+        </section>
+    </main>
+</body>
+</html>

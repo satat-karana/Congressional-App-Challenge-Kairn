@@ -467,3 +467,74 @@ html.no-animations *::after {
 #countdown-panel,
 #question-panel { animation: panel-pop 350ms ease-out; }
 @keyframes panel-pop { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+
+
+/* ===== [AI-FIX] Reliable reminder animations and viewport sizing =====
+   The reminder widget uses viewport coordinates because .floating is position: fixed.
+   These rules override earlier sizing where needed and also work in split-screen windows. */
+
+#camera-widget {
+  min-width: 0;
+}
+
+#widget-video {
+  box-sizing: border-box;
+  transform: translateZ(0);
+  will-change: top, left, width, height, border-radius;
+}
+
+#widget-video.floating {
+  position: fixed !important;
+  margin: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  z-index: 2147483000 !important;
+  box-sizing: border-box;
+  will-change: top, left, width, height, border-radius;
+  transition:
+    top 700ms cubic-bezier(.2, .75, .25, 1),
+    left 700ms cubic-bezier(.2, .75, .25, 1),
+    width 700ms cubic-bezier(.2, .75, .25, 1),
+    height 700ms cubic-bezier(.2, .75, .25, 1),
+    border-radius 500ms ease,
+    box-shadow 500ms ease;
+}
+
+#widget-video.floating.takeover {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+#widget-video.floating #webcam {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#widget-video.floating #countdown-panel,
+#widget-video.floating #question-panel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+#widget-video.floating #countdown-panel {
+  z-index: 5;
+}
+
+#widget-video.floating #question-panel {
+  z-index: 6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #widget-video.floating {
+    transition: none !important;
+  }
+
+  #countdown-panel,
+  #question-panel {
+    animation: none !important;
+  }
+}

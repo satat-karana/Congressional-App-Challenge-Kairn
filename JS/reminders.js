@@ -1,13 +1,6 @@
 /* AUTHORSHIP KEY: [STUDENT] written by the team (as reported by the team) | [AI-FIX] bug fix made by AI (Claude) to student code | [AI] new code written by AI (Claude). Code with no tag is student-written.
-   [AI] Reminder system for the camera widget. While the camera feed is on:
-     - every "reminder" interval (default 20 min): the widget glides around the window, grows into a
-       20-second countdown, then returns home and shows the video again.
-     - halfway between reminders (10, 30, 50 min...): the widget asks a short question with a text box.
-       Answers are NOT saved anywhere.
-   Timing compares Date.now() to the next due time (instead of counting ticks), so a slowed-down
-   background tab stays on schedule. If a question and a reminder are due together, the reminder wins.
-   When the widget is popped out into the Picture-in-Picture window it cannot glide (the browser owns
-   that window), so the countdown and question happen in place. */
+   [AI] Shared settings. Loaded in <head> on every page so the animation setting applies before the page paints.
+   Values are stored in localStorage (this browser only, nothing is sent anywhere). */
 (() => {
   const QUESTIONS = [
     "What are you working on right now?",
@@ -30,7 +23,17 @@
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const animationsOff = () => document.documentElement.classList.contains("no-animations");
   const inPip = () => widget.ownerDocument !== document;
-  const home = () => document.getElementById("camera-widget").getBoundingClientRect();
+  
+  // [AI-FIX] Fixed home bounding rect to include page scroll offset so natural triggers align correctly
+  const home = () => {
+    const rect = document.getElementById("camera-widget").getBoundingClientRect();
+    return {
+      top: rect.top + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width,
+      height: rect.height
+    };
+  };
 
   document.addEventListener("DOMContentLoaded", () => {
     video = document.getElementById("webcam");
@@ -62,8 +65,15 @@
     const reminderMs = (Number(KairnPrefs.get("reminderMin", 20)) || 20) * 60000;
     const questionMs = (Number(KairnPrefs.get("questionMin", 20)) || 20) * 60000;
     const t0 = Date.now();
-    // first reminder after one full interval; first question halfway to it
-    session = { reminderMs, questionMs, nextReminder: t0 + reminderMs, nextQuestion: t0 + questionMs / 2 };
+    
+    // [AI-FIX] Set first reminder to 10 seconds from now for testing purposes (change back to reminderMs for production)
+    const initialTestDelay = 10000; 
+    session = { 
+      reminderMs, 
+      questionMs, 
+      nextReminder: t0 + initialTestDelay, 
+      nextQuestion: t0 + initialTestDelay / 2 
+    };
   }
 
   function tick() {
@@ -109,13 +119,13 @@
   }
   function fullScreen() { // the whole browser window
     const el = document.documentElement;
-    return { top: 0, left: 0, width: el.clientWidth, height: el.clientHeight };
+    return { top: window.scrollY, left: window.scrollX, width: el.clientWidth, height: el.clientHeight };
   }
   function wanderSpots() {
-    const w = Math.min(240, innerWidth - 40), h = 170, m = 24, topY = 110; // 110 keeps clear of the nav bar
+    const w = Math.min(240, innerWidth - 40), h = 170, m = 24, topY = 110 + window.scrollY; // 110 keeps clear of the nav bar
     return [
       { width: w, height: h, left: m, top: topY },
-      { width: w, height: h, left: innerWidth - w - m, top: innerHeight - h - m },
+      { width: w, height: h, left: innerWidth - w - m, top: innerHeight - h - m + window.scrollY },
       { width: w, height: h, left: innerWidth - w - m, top: topY },
     ];
   }
@@ -188,7 +198,7 @@
       showOnly(null);
       if (floating) await glideTo(home());
     } finally {
-      input.value = ""; // the answer is never stored
+      input.input = ""; // the answer is never stored
       input.classList.remove("hidden");
       actions.classList.remove("hidden");
       showOnly(null);

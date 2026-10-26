@@ -76,23 +76,54 @@
     };
   }
 
+ // ---- Scheduler: runs once a second ----
+  function startSession() {
+    const reminderMs = (Number(KairnPrefs.get("reminderMin", 20)) || 20) * 60000;
+    const questionMs = (Number(KairnPrefs.get("questionMin", 20)) || 20) * 60000;
+    const t0 = Date.now();
+    
+    // 10-second test delay
+    const initialTestDelay = 10000; 
+    session = { 
+      reminderMs, 
+      questionMs, 
+      nextReminder: t0 + initialTestDelay, 
+      nextQuestion: t0 + initialTestDelay / 2 
+    };
+    console.log("Kairn Session Started. First reminder in 10s.");
+  }
+
   function tick() {
     const cameraOn = !!video.srcObject;
+    
+    // Failsafe: if the camera turns off, reset busy so it doesn't stay locked
+    if (!cameraOn) {
+      if (session) console.log("Camera turned off, resetting session.");
+      session = null;
+      busy = false; 
+    }
+
     if (cameraOn && !session) startSession();
-    if (!cameraOn) session = null;
-    if (!session || busy) return;
+    
+    if (!session || busy) {
+      // Uncomment the line below if you want to watch it tick in the console
+      // console.log("Tick skipped. Session active:", !!session, "Busy:", busy);
+      return;
+    }
 
     const now = Date.now();
+    console.log("Checking timer. Time left for reminder:", Math.round((session.nextReminder - now) / 1000), "s");
+
     if (now >= session.nextReminder) {
       while (session.nextReminder <= now) session.nextReminder += session.reminderMs;
-      while (session.nextQuestion <= now) session.nextQuestion += session.questionMs; // reminder wins a clash
+      while (session.nextQuestion <= now) session.nextQuestion += session.questionMs;
+      console.log("Triggering natural reminder!");
       runReminder().catch(console.error);
     } else if (now >= session.nextQuestion) {
       while (session.nextQuestion <= now) session.nextQuestion += session.questionMs;
       runQuestion().catch(console.error);
     }
   }
-
   // ---- Moving the widget (in-page only) ----
   function setRect(r) {
     Object.assign(widget.style, { top: r.top + "px", left: r.left + "px", width: r.width + "px", height: r.height + "px" });

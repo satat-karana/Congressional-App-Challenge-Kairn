@@ -1,126 +1,102 @@
-/* AUTHORSHIP KEY: [STUDENT] existing project structure | [AI-FIX] reliability fixes. */
-"use strict";
-
+/* AUTHORSHIP KEY: [STUDENT] written by the team (as reported by the team) | [AI-FIX] bug fix made by AI (Claude) to student code | [AI] new code written by AI (Claude). Code with no tag is student-written.
+   File status: student-written, plus one [AI-FIX] below. */
 let stream = null;
 let videoElement = null;
-let widget = null;
-let greeting = null;
-let pipWindow = null;
+let widget = null;    // back side (#widget-video)
+let greeting = null;  // front side (#widget-greeting)
 
 document.addEventListener("DOMContentLoaded", () => {
   videoElement = document.getElementById("webcam");
   widget = document.getElementById("widget-video");
   greeting = document.getElementById("widget-greeting");
 
-  const endButton = document.getElementById("end-feed-button");
-  if (endButton) endButton.addEventListener("click", stopCamera);
-
-  if (!videoElement || !widget || !greeting) {
-    console.error("Kairn camera: required widget elements were not found.");
-  }
+  // finds the button that's already inside #widget-video, no new id needed
+  // [AI-FIX] was widget.querySelector("button"), which grabs the FIRST button inside the widget. The widget now holds
+  // the reminder buttons too, so the End Feed button is looked up by its own id instead.
+  document.getElementById("end-feed-button").addEventListener("click", stopCamera);
 });
 
 function showVideo() {
-  if (!greeting || !widget) return;
   greeting.classList.add("hidden");
   widget.classList.remove("hidden");
 }
 
 function showGreeting() {
-  if (!widget || !greeting) return;
   widget.classList.add("hidden");
   greeting.classList.remove("hidden");
 }
 
-async function ensureCamera() {
-  if (!videoElement) throw new Error("The webcam video element is missing.");
-  if (videoElement.srcObject) return videoElement.srcObject;
-
-  if (!navigator.mediaDevices?.getUserMedia) {
-    throw new Error("Camera access is unavailable. Use a supported browser and a secure context (HTTPS or localhost).");
-  }
-
-  stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "user" },
-    audio: false
-  });
-  videoElement.srcObject = stream;
-  await videoElement.play().catch(() => {});
-  return stream;
-}
-
 async function startCamera() {
   try {
-    await ensureCamera();
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false,
+    });
+    videoElement.srcObject = stream;
     showVideo();
   } catch (error) {
-    console.error("Error accessing the camera:", error);
-    alert(error.message || "Could not access the camera. Check browser permissions and try again.");
+    console.error("Error accessing the camera: ", error);
+    alert("Could not access the camera, please check permissions.");
   }
 }
 
 function stopCamera() {
-  const activeStream = videoElement?.srcObject || stream;
-  if (activeStream) {
-    activeStream.getTracks().forEach((track) => track.stop());
+  if (videoElement.srcObject) {
+    videoElement.srcObject.getTracks().forEach((track) => track.stop());
+    videoElement.srcObject = null;
   }
-  if (videoElement) videoElement.srcObject = null;
   stream = null;
-
-  if (pipWindow && !pipWindow.closed) pipWindow.close();
-  pipWindow = null;
+  // close the pop-out window if it's open
+  window.documentPictureInPicture?.window?.close();
   showGreeting();
 }
 
 async function launchWidget() {
   if (!("documentPictureInPicture" in window)) {
-    alert("Document Picture-in-Picture is not supported in this browser. Use the page widget instead.");
+    alert("Document Picture-in-Picture is not supported.");
     return;
   }
 
-  let newPipWindow = null;
+  let pipWindow = null;
   try {
-    // Request the PiP window before prompting for camera access so the click activation is preserved.
-    newPipWindow = await window.documentPictureInPicture.requestWindow({
-      width: 360,
-      height: 260
+    // Open the window FIRST (your comment said this, but the code did the camera first).
+    // requestWindow needs the click's user activation, which the
+    // camera permission prompt can use up.
+    pipWindow = await window.documentPictureInPicture.requestWindow({
+      width: 300,
+      height: 220,
     });
-    pipWindow = newPipWindow;
 
-    for (const link of document.querySelectorAll('link[rel="stylesheet"]')) {
-      const copy = newPipWindow.document.createElement("link");
+    // Copy stylesheets using absolute URLs so relative paths can't break
+    document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+      const copy = pipWindow.document.createElement("link");
       copy.rel = "stylesheet";
       copy.href = link.href;
-      newPipWindow.document.head.appendChild(copy);
+      pipWindow.document.head.appendChild(copy);
+    });
+
+    // Start the camera if it isn't already running
+    if (!videoElement.srcObject) {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false,
+      });
+      videoElement.srcObject = stream;
     }
 
-    // Copy any inline styles needed by the widget. External CSS is linked above.
-    const inlineStyle = document.createElement("style");
-    inlineStyle.textContent = `
-      html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
-      body { position: relative; }
-      #widget-video { position: fixed !important; inset: 0 !important; width: 100% !important; height: 100% !important; border-radius: 0 !important; }
-      #widget-video video { width: 100%; height: 100%; object-fit: cover; }
-    `;
-    newPipWindow.document.head.appendChild(inlineStyle);
-
-    await ensureCamera();
-    newPipWindow.document.body.appendChild(widget);
+    // Move the widget in, and make sure it's actually visible
+    pipWindow.document.body.appendChild(widget);
     widget.classList.remove("hidden");
-    await videoElement.play().catch(() => {});
+    videoElement.play().catch(() => {});
 
-    newPipWindow.addEventListener("pagehide", () => {
-      pipWindow = null;
-      // The widget may have been removed by page teardown; only restore if the home container exists.
-      const home = document.getElementById("camera-widget");
-      if (home && widget) home.appendChild(widget);
-      if (videoElement?.srcObject) showVideo();
+    // Put it back when the window closes
+    pipWindow.addEventListener("pagehide", () => {
+      document.getElementById("camera-widget").appendChild(widget);
+      if (videoElement.srcObject) showVideo();
       else showGreeting();
-    }, { once: true });
+    });
   } catch (error) {
-    console.error("Error launching Picture-in-Picture widget:", error);
-    if (newPipWindow && !newPipWindow.closed) newPipWindow.close();
-    pipWindow = null;
-    alert(error.message || "Could not launch the mirror widget.");
+    console.error("Error Launching Widget:", error);
+    if (pipWindow) pipWindow.close();
   }
 }

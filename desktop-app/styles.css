@@ -35,7 +35,7 @@
    The gradient is a real fallback if the photo is missing. */
 html {
   background-color: var(--bold-color);
-  background-image: url("../Media/orange-blue-sky-image.jpg"),
+  background-image: url("orange-blue-sky-image.jpg"),
     conic-gradient(
       from 121deg,
       var(--accent-color) 0deg,

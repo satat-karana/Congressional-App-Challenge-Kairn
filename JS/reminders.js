@@ -35,12 +35,21 @@
     };
   };
 
-  document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
     video = document.getElementById("webcam");
     widget = document.getElementById("widget-video");
-    if (!video || !widget) return;
+    
+    console.log("Reminders script loaded. Found video:", !!video, "Found widget:", !!widget);
+
+    if (!video || !widget) {
+      console.error("ERROR: Webcam or widget element not found on this page!");
+      return;
+    }
+    
     setInterval(tick, 1000);
-    // Used by the Preview buttons on the home page (also callable from the console)
+    console.log("Tick interval started successfully.");
+
+    // Used by the Preview buttons on the home page
     window.kairnDemo = { reminder: () => preview(runReminder), question: () => preview(runQuestion) };
   });
 

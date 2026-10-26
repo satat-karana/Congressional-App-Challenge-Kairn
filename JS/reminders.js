@@ -25,8 +25,20 @@
   const inPip = () => widget.ownerDocument !== document;
   
   // [AI-FIX] Fixed home bounding rect to include page scroll offset so natural triggers align correctly
-  const home = () => {
-    const rect = document.getElementById("camera-widget").getBoundingClientRect();
+const home = () => {
+    const el = document.getElementById("camera-widget");
+    const rect = el ? el.getBoundingClientRect() : {};
+    
+    // Fallback dimensions if the widget isn't fully rendered yet
+    if (!rect.width || !rect.height) {
+      return {
+        top: window.scrollY + 180,
+        left: window.innerWidth * 0.05,
+        width: window.innerWidth * 0.9,
+        height: window.innerHeight * 0.53
+      };
+    }
+    
     return {
       top: rect.top + window.scrollY,
       left: rect.left + window.scrollX,
@@ -173,25 +185,24 @@ document.addEventListener("DOMContentLoaded", () => {
     ["countdown-panel", "question-panel"].forEach((id) => $(id).classList.toggle("hidden", id !== panelId));
   }
 
-  // ---- Reminder: wander, expand, 20 s countdown, return ----
+// ---- Reminder: expand straight to full screen, countdown, return ----
   async function runReminder() {
     busy = true;
     const floating = !inPip();
     try {
       if (floating) {
         startFloating();
-        for (const spot of wanderSpots()) await glideTo(spot);
         widget.classList.add("takeover"); // square corners while it fills the window
-        await glideTo(fullScreen()); // grow to take up the whole screen for the countdown
+        await glideTo(fullScreen()); // grow straight to take up the whole screen
       }
       showOnly("countdown-panel");
       for (let s = COUNTDOWN_SECONDS; s > 0; s--) {
         $("countdown-number").textContent = s;
         await sleep(1000);
-        if (!video.srcObject && !previewing) break; // camera turned off mid-reminder (a preview has no camera on purpose)
+        if (!video.srcObject && !previewing) break; 
       }
-      showOnly(null); // video feed is visible again
-      widget.classList.remove("takeover"); // shrink back, corners round again
+      showOnly(null); 
+      widget.classList.remove("takeover"); 
       if (floating) await glideTo(home());
     } finally {
       showOnly(null);

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!-- AUTHORSHIP KEY: [STUDENT] written by the team (as reported by the team) | [AI-FIX] bug fix made by AI (Claude) to student code | [AI] new code written by AI (Claude). Code with no tag is student-written.
+     File status: student-written page; the settings controls and scripts are [AI]. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../CSS/styles.css" />
+    <script src="../JS/prefs.js"></script> <!-- [AI] shared settings, loaded early -->
+    <script type="text/javascript" src="../JS/nav.js" defer></script>
+    <script src="../JS/effects-settings.js" defer></script> <!-- [AI] -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <title>Kairn</title>
+</head>
+<body id="settings">
+<header>
+    <nav>
+        <div id="navigation-bar">
+          <ul>
+            <li class="navigation">
+              <a class="navigation" href="homepage.html">
+                <i class="fa-regular fa-compass"></i>
+                <i class="fa-solid fa-compass"></i>
+                Home
+              </a>
+            </li>
+            <li class="navigation">
+              <a class="navigation" href="screentime.html">
+                <i class="fa-regular fa-hourglass"></i>
+                <i class="fa-solid fa-hourglass-half"></i>
+                Screen Time
+              </a>
+            </li>
+            <li class="navigation">
+              <a class="navigation" href="settings.html">
+                <i class="fa-regular fa-lightbulb"></i>
+                <i class="fa-solid fa-lightbulb"></i>
+                Effects
+              </a>
+            </li>
+            <!-- <li class="navigation">
+              <a class="navigation" href="#">
+                <i class="fa-regular fa-circle-question"></i>
+                <i class="fa-solid fa-circle-question"></i>
+                Info
+              </a>
+            </li>
+            <li class="navigation">
+              <a class="navigation" href="sign-up.html">
+                <i class="fa-regular fa-user"></i>
+                <i class="fa-solid fa-user"></i>
+                Account
+              </a>
+            </li> -->
+          </ul>
+        </div>
+        <!-- <span class="navigation">
+            <i class="fa-regular fa-address-card"></i>
+            <i class="fa-solid fa-address-card"></i>
+            <p></p>
+        </span> -->
+      </nav>
+      <h1>For Flips, Spins, Animations and More</h1>
+</header>
+    <!-- [AI] settings controls; behaviour is in effects-settings.js -->
+    <section>
+        <button id="toggle-animations" type="button" aria-pressed="false">Remove Animations</button>
+        <div class="setting">
+            <label for="reminder-min">Eye-rest reminder every (minutes)</label>
+            <input id="reminder-min" type="number" min="0.5" max="240" step="0.5" value="20">
+        </div>
+        <div class="setting">
+            <label for="question-min">Check-in question every (minutes)</label>
+            <input id="question-min" type="number" min="0.5" max="240" step="0.5" value="20">
+        </div>
+        <p id="settings-note">Saved automatically in this browser. Changes apply the next time you start the camera feed.</p>
+    </section>
+</body>
+</html>

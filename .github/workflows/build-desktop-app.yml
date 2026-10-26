@@ -1,0 +1,36 @@
+# [AI] Builds the Windows app on GitHub's servers and publishes it as the latest Release,
+# so nobody needs Node or Electron installed. Runs when desktop-app/ changes on main, or by hand
+# (repo > Actions > "Build Windows app" > Run workflow).
+name: Build Windows app
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths: ['desktop-app/**', '.github/workflows/build-desktop-app.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npx electron-builder --win portable --publish never
+      - name: Give the file a fixed name
+        shell: pwsh
+        run: |
+          $f = Get-ChildItem dist -Filter *.exe | Select-Object -First 1
+          if ($f.Name -ne 'Kairn-Screentime.exe') { Move-Item $f.FullName dist/Kairn-Screentime.exe -Force }
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete app-latest --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          gh release create app-latest dist/Kairn-Screentime.exe --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Kairn Screentime (Windows)" --notes "Download Kairn-Screentime.exe and run it." --latest
